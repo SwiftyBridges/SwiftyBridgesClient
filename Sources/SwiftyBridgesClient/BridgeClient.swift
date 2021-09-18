@@ -33,19 +33,41 @@ extension BridgeClient {
         case 200..<299:
             break
         default:
-            throw HTTPError(statusCode: response.statusCode)
+            let errorResponse = try? jsonDecoder.decode(ErrorResponse.self, from: data)
+            throw HTTPError(
+                reason: errorResponse?.reason,
+                response: response
+            )
         }
         
         return try jsonDecoder.decode(Call.ReturnType.self, from: data)
     }
 }
 
-struct UnknownError: LocalizedError {}
+struct UnknownError: LocalizedError {
+    var errorDescription: String? {
+        NSLocalizedString("An unknown error occurred", comment: "Error message")
+    }
+}
+
+private struct ErrorResponse: Codable {
+    var error: Bool
+    var reason: String
+}
 
 public struct HTTPError: LocalizedError {
-    public var statusCode: Int
+    public var reason: String?
+    public var response: HTTPURLResponse
+    
+    public var statusCode: Int {
+        response.statusCode
+    }
     
     public var errorDescription: String? {
-        NSLocalizedString("HTTP error", comment: "") + " \(statusCode)"
+        (reason ?? HTTPURLResponse.localizedString(forStatusCode: statusCode)) + " (\(statusCode))"
+    }
+    
+    public var isUnauthorizedError: Bool {
+        statusCode == 401
     }
 }

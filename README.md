@@ -6,6 +6,6 @@
 
 SwiftyBridges is here to help! 😎
 
-## Usage
+# Usage
 
 See [the documentation for SwiftyBridges](https://github.com/SwiftyBridges/SwiftyBridgesVapor).

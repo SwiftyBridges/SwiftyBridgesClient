@@ -1,4 +1,7 @@
 import Foundation
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
 
 /// Performs API method calls of SwiftyBridge APIs
 public class BridgeClient {

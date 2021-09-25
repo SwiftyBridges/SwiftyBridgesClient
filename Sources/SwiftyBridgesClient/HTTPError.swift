@@ -6,6 +6,9 @@
 //
 
 import Foundation
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
 
 /// Thrown by an API method call if the server reports an error
 public struct HTTPError: LocalizedError {

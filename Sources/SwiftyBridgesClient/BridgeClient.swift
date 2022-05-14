@@ -6,7 +6,7 @@ import FoundationNetworking
 /// Performs API method calls of SwiftyBridge APIs
 public class BridgeClient {
     /// The `BridgeClient` instance used by default
-    public static let shared: BridgeClient = .init(urlSession: .shared)
+    public static let `default`: BridgeClient = .init(urlSession: .shared)
     
     private let urlSession: URLSession
     

@@ -22,7 +22,7 @@ open class API {
     /// - Parameters:
     ///   - baseRequest: The request that is modified by SwiftyBridgesClient to create an API call. Must be configured with the server URL where the `APIRouter` is listening.
     ///   - client: Optionally provide this parameter if API call shall use a custom client. This may be the case if you want to use a custom `URLSession`.
-    public init(baseRequest: URLRequest, client: BridgeClient = .shared) {
+    public init(baseRequest: URLRequest, client: BridgeClient = .default) {
         self.baseRequest = baseRequest
         self.client = client
     }
@@ -45,7 +45,7 @@ extension API {
     /// - Parameters:
     ///   - url: The server URL where the `APIRouter` is listening
     ///   - client: Optionally provide this parameter if API call shall use a custom client. This may be the case if you want to use a custom `URLSession`.
-    public convenience init(url: URL, client: BridgeClient = .shared) {
+    public convenience init(url: URL, client: BridgeClient = .default) {
         self.init(baseRequest: URLRequest(url: url), client: client)
     }
     
@@ -54,7 +54,7 @@ extension API {
     ///   - url: The server URL where the `APIRouter` is listening
     ///   - bearerToken: The string used as the bearer token of API method requests
     ///   - client: Optionally provide this parameter if API call shall use a custom client. This may be the case if you want to use a custom `URLSession`.
-    public convenience init(url: URL, bearerToken: String, client: BridgeClient = .shared) {
+    public convenience init(url: URL, bearerToken: String, client: BridgeClient = .default) {
         var request = URLRequest(url: url)
         request.addValue("Bearer \(bearerToken)", forHTTPHeaderField: "Authorization")
         self.init(baseRequest: request, client: client)

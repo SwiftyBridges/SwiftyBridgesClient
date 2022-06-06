@@ -29,13 +29,13 @@ public struct ParentReference<Parent: FluentModelStruct> {
     var id: Parent.IDValue {
         didSet {
             if value.id != id {
-                value = nil
+                boxedValue = nil
             }
         }
     }
     
-    /// Contains the full model if present. This is the case if the server sent the full model instead of only its ID or if this instance was initialized using an instance of `Model`.
-    private(set) var value: Parent?
+    /// We store a boxed value instead of the value directly because a generated struct may contain references to itself inside a `ParentReference`. This would result in an error without `Boxed`. See `value`.
+    private var boxedValue: Boxed<Parent>?
     
     /// Creates a reference containing only an ID
     public init(id: Parent.IDValue) {
@@ -46,11 +46,18 @@ public struct ParentReference<Parent: FluentModelStruct> {
     public init?(_ parent: Parent) {
         guard let id = parent.id else { return nil }
         self.id = id
-        self.value = parent
+        self.boxedValue = .init(parent)
     }
     
     public subscript<T>(dynamicMember keyPath: KeyPath<Parent, T>) -> T? {
         value?[keyPath: keyPath]
+    }
+}
+
+extension ParentReference {
+    /// Contains the full model if present. This is the case if the server sent the full model instead of only its ID or if this instance was initialized using an instance of `Model`.
+    var value: Parent? {
+        boxedValue?.value
     }
 }
 
@@ -65,7 +72,7 @@ extension ParentReference: Codable {
             let id = value.id
         {
             // The whole parent was set. Save it in `value`.
-            self.value = value
+            self.boxedValue = .init(value)
             self.id = id
             return
         }
@@ -90,5 +97,38 @@ extension ParentReference: Codable {
         } else {
             try saveOnlyID()
         }
+    }
+}
+
+extension ParentReference: Equatable where Parent.IDValue: Equatable {
+    public static func == (lhs: ParentReference<Parent>, rhs: ParentReference<Parent>) -> Bool {
+        lhs.id == rhs.id
+    }
+}
+
+extension ParentReference: Hashable where Parent.IDValue: Hashable {
+    public func hash(into hasher: inout Hasher) {
+        id.hash(into: &hasher)
+    }
+}
+
+/// Allows a struct to have a property containing its own type
+private class Boxed<T> {
+    let value: T
+    
+    init(_ value: T) {
+        self.value = value
+    }
+}
+
+extension Boxed: Equatable where T: Equatable {
+    static func == (lhs: Boxed<T>, rhs: Boxed<T>) -> Bool {
+        lhs.value == rhs.value
+    }
+}
+
+extension Boxed: Hashable where T: Hashable {
+    func hash(into hasher: inout Hasher) {
+        value.hash(into: &hasher)
     }
 }

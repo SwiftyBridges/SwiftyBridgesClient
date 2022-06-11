@@ -25,7 +25,13 @@ public typealias OptionalChild = OptionalParent
 @propertyWrapper
 public struct OptionalParent<To: FluentModelStruct> {
     /// The ID of the referenced model
-    public var wrappedValue: To.IDValue?
+    public var wrappedValue: To.IDValue? {
+        didSet {
+            if projectedValue?.id != wrappedValue {
+                projectedValue = nil
+            }
+        }
+    }
     
     /// Contains the full model if present. This is the case if the server sent the full model instead of only its ID.
     ///

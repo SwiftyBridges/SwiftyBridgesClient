@@ -14,7 +14,7 @@ public struct Children<To: FluentModelStruct> {
     }
 }
 
-extension Children: Codable {
+extension Children: Codable, _SkipEncodingForFluent {
     public init(from decoder: Decoder) throws {
         do {
             wrappedValue = try .init(from: decoder)
@@ -32,7 +32,7 @@ extension Children: Codable {
     }
 }
 
-extension Children: DecodableFromMissingKey {
+extension Children: _DecodableFromMissingKey {
     public init<Key>(fromMissingKey missingKey: Key, in container: KeyedDecodingContainer<Key>) where Key : CodingKey {
         wrappedValue = []
     }

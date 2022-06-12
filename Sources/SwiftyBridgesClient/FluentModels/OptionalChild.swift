@@ -1,27 +1,27 @@
 import Foundation
 
-/// A property of this type is generated if the corresponding property on the server uses Fluent's `@OptionalParent`. It references a Fluent model on the server.
+/// A property of this type is generated if the corresponding property on the server uses Fluent's `@OptionalChild`. It references a Fluent model on the server.
 ///
 /// The ID of the referenced model can be read or set using the property directly. If the property values of the referenced instance have been sent by the server, it can be accessed using the property name preceded by `$`:
 ///
-///     struct Parent: FluentModelStruct {
+///     struct Child: FluentModelStruct {
 ///         var id: UUID?
 ///         var name: String
 ///     }
 ///
-///     struct Child: FluentModelStruct {
+///     struct Parent: FluentModelStruct {
 ///         var id: UUID?
 ///
-///         @OptionalParent<Parent>
-///         var parent: Parent.IDValue?
+///         @OptionalChild<Child>
+///         var child: Child.IDValue?
 ///     }
 ///
-///     let child: Child = ...
+///     let parent: Parent = ...
 ///
-///     let parent: Parent? = child.$parent
+///     let child: Child? = parent.$child
 ///
 @propertyWrapper
-public struct OptionalParent<To: FluentModelStruct> {
+public struct OptionalChild<To: FluentModelStruct> {
     /// The ID of the referenced model
     public var wrappedValue: To.IDValue? {
         didSet {
@@ -33,7 +33,7 @@ public struct OptionalParent<To: FluentModelStruct> {
     
     /// Contains the full model if present. This is the case if the server sent the full model instead of only its ID.
     ///
-    /// We store it indirectly because a generated struct may contain references to itself inside an `OptionalParent`. This would result in an error without `@Indirect`.
+    /// We store it indirectly because a generated struct may contain references to itself inside an `OptionalChild`. This would result in an error without `@Indirect`.
     @Indirect
     public private(set) var projectedValue: To?
     
@@ -42,7 +42,7 @@ public struct OptionalParent<To: FluentModelStruct> {
     }
 }
 
-extension OptionalParent: Codable {
+extension OptionalChild: Codable, _SkipEncodingForFluent {
     private enum CodingKeys: String, CodingKey {
         case id
     }
@@ -64,10 +64,7 @@ extension OptionalParent: Codable {
     }
     
     public func encode(to encoder: Encoder) throws {
-        if
-            let object = projectedValue,
-            !Environment.encodingForFluent // If we are encoding data to be sent to Fluent, we don't need to encode the full object because Fluent does not decode it
-        {
+        if let object = projectedValue {
             try object.encode(to: encoder)
         } else {
             try ["id": wrappedValue].encode(to: encoder)
@@ -75,13 +72,19 @@ extension OptionalParent: Codable {
     }
 }
 
-extension OptionalParent: Equatable where To.IDValue: Equatable {
-    public static func == (lhs: OptionalParent<To>, rhs: OptionalParent<To>) -> Bool {
+extension OptionalChild: _DecodableFromMissingKey {
+    public init<Key>(fromMissingKey missingKey: Key, in container: KeyedDecodingContainer<Key>) where Key : CodingKey {
+        wrappedValue = nil
+    }
+}
+
+extension OptionalChild: Equatable where To.IDValue: Equatable {
+    public static func == (lhs: OptionalChild<To>, rhs: OptionalChild<To>) -> Bool {
         lhs.wrappedValue == rhs.wrappedValue
     }
 }
 
-extension OptionalParent: Hashable where To.IDValue: Hashable {
+extension OptionalChild: Hashable where To.IDValue: Hashable {
     public func hash(into hasher: inout Hasher) {
         wrappedValue.hash(into: &hasher)
     }

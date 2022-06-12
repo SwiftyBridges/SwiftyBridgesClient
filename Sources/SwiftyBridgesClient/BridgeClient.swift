@@ -74,7 +74,9 @@ private extension BridgeClient {
         request.setValue(Call.methodID, forHTTPHeaderField: "API-Method")
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try jsonEncoder.encode(call)
+        try Environment.$encodingForFluent.withValue(true) {
+            request.httpBody = try jsonEncoder.encode(call)
+        }
         let (data, response) = try await urlSession.data(for: request)
         
         guard let response = response as? HTTPURLResponse else {

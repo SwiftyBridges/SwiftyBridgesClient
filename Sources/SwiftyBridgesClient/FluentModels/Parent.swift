@@ -64,7 +64,14 @@ extension Parent: Codable {
     }
     
     public func encode(to encoder: Encoder) throws {
-        try ["id": wrappedValue].encode(to: encoder)
+        if
+            let object = projectedValue,
+            !Environment.encodingForFluent // If we are encoding data to be sent to Fluent, we don't need to encode the full object because Fluent does not decode it
+        {
+            try object.encode(to: encoder)
+        } else {
+            try ["id": wrappedValue].encode(to: encoder)
+        }
     }
 }
 
